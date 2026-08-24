@@ -16,7 +16,8 @@ package body Lempel_Ziv_Stac is
         end if;
         
         if B then
-            Writer.Buffer(Writer.Byte_Pos) := Writer.Buffer(Writer.Byte_Pos) or (2 ** Writer.Bit_Pos);
+            -- Explicitly cast the integer literal to our modular Byte type for bitwise OR
+            Writer.Buffer(Writer.Byte_Pos) := Writer.Buffer(Writer.Byte_Pos) or Byte(2 ** Writer.Bit_Pos);
         end if;
         
         if Writer.Bit_Pos = 0 then
@@ -33,7 +34,8 @@ package body Lempel_Ziv_Stac is
     procedure Write_Bits (Writer : in out Bit_Writer; Value : in Natural; Count : in Positive) is
     begin
         for I in reverse 0 .. Count - 1 loop
-            Write_Bit(Writer, (Value and (2 ** I)) /= 0);
+            -- Use mathematical division and modulo to extract the bit without using 'and' on a Natural
+            Write_Bit(Writer, (Value / (2 ** I)) mod 2 /= 0);
         end loop;
     end Write_Bits;
 
@@ -50,7 +52,10 @@ package body Lempel_Ziv_Stac is
         if Reader.Byte_Pos > Reader.Max_Len then
             raise Decompression_Error;
         end if;
-        Result := (Reader.Buffer(Reader.Byte_Pos) and (2 ** Reader.Bit_Pos)) /= 0;
+        
+        -- Explicitly cast the integer literal to Byte for the bitwise AND
+        Result := (Reader.Buffer(Reader.Byte_Pos) and Byte(2 ** Reader.Bit_Pos)) /= 0;
+        
         if Reader.Bit_Pos = 0 then
             Reader.Byte_Pos := Reader.Byte_Pos + 1;
             Reader.Bit_Pos := 7;
